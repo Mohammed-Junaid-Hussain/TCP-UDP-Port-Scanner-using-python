@@ -94,13 +94,19 @@ class PortScannerGUI:
         
         threads = 1021  # Number of threads for scanning
         
-        def scan(port):
+        def scan(port, protocol):
             # Function to scan a specific port
-            s = socket.socket()
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM if protocol == 'tcp' else socket.SOCK_DGRAM)
             s.settimeout(5)  # Timeout for socket connection
-            result = s.connect_ex((host, port))  # Check if connection is successful
-            s.close()
-            return result == 0  # Return True if port is open, False otherwise
+            try:
+                if protocol == 'tcp':
+                    s.connect((host, port))  # Check TCP connection
+                else:
+                    s.sendto(b'', (host, port))  # Check UDP connection
+                s.close()
+                return True
+            except socket.error:
+                return False
         
         queue = Queue()  # Queue to store ports for scanning
         
@@ -109,16 +115,21 @@ class PortScannerGUI:
             for port in range(start_port, end_port + 1):
                 queue.put(port)
         
-        open_ports = []  # List to store open ports
+        open_ports_tcp = []  # List to store open TCP ports
+        open_ports_udp = []  # List to store open UDP ports
         
         def worker():
             # Worker function for each thread to scan ports
             while not queue.empty():
                 port = queue.get()
-                if scan(port):
-                    open_ports.append(port)
-                    service_name = socket.getservbyport(port)  # Get service name corresponding to the port
-                    self.text_output.insert("end", f"Port {port} is open! Service: {service_name}\n")
+                if scan(port, 'tcp'):
+                    open_ports_tcp.append(port)
+                    service_name = socket.getservbyport(port, 'tcp')  # Get service name corresponding to the port
+                    self.text_output.insert("end", f"TCP Port {port} is open! Service: {service_name}\n")
+                if scan(port, 'udp'):
+                    open_ports_udp.append(port)
+                    service_name = socket.getservbyport(port, 'udp')  # Get service name corresponding to the port
+                    self.text_output.insert("end", f"UDP Port {port} is open! Service: {service_name}\n")
         
         get_ports()  # Populate the queue with ports to scan
         
