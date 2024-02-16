@@ -27,4 +27,4 @@ This Python script provides a graphical user interface (GUI) for a port scanner,
 
 ## Author
 
-[Junaid Hussain](https://github.com/Mohammed-Juniad-Hussain/Port-Scanner-using-python.git)
+[Junaid Hussain](https://github.com/Mohammed-Juniad-Hussain)
