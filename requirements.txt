@@ -1,0 +1,6 @@
+socket
+threading 
+tkinter
+queue 
+datetime 
+os
