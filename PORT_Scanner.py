@@ -91,9 +91,9 @@ class PortScannerGUI:
         
     def run_scanner(self, host, start_port, end_port):
         # Function to perform port scanning
-        
+
         threads = 1021  # Number of threads for scanning
-        
+
         def scan(port, protocol):
             # Function to scan a specific port
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM if protocol == 'tcp' else socket.SOCK_DGRAM)
@@ -107,17 +107,17 @@ class PortScannerGUI:
                 return True
             except socket.error:
                 return False
-        
+
         queue = Queue()  # Queue to store ports for scanning
-        
+
         def get_ports():
             # Function to populate the queue with ports to scan
             for port in range(start_port, end_port + 1):
                 queue.put(port)
-        
+
         open_ports_tcp = []  # List to store open TCP ports
         open_ports_udp = []  # List to store open UDP ports
-        
+
         def worker():
             # Worker function for each thread to scan ports
             while not queue.empty():
@@ -130,21 +130,27 @@ class PortScannerGUI:
                     open_ports_udp.append(port)
                     service_name = socket.getservbyport(port, 'udp')  # Get service name corresponding to the port
                     self.text_output.insert("end", f"UDP Port {port} is open! Service: {service_name}\n")
-        
+
         get_ports()  # Populate the queue with ports to scan
-        
+
         thread_list = []
         for _ in range(threads):
             # Create and start threads for port scanning
             thread = threading.Thread(target=worker)
             thread_list.append(thread)
-        
+
         for thread in thread_list:
             thread.start()
-        
+
         for thread in thread_list:
             thread.join()  # Wait for all threads to complete
-        
+
+        # Check if port 443 is open
+        if 443 in open_ports_tcp:
+            self.text_output.insert("end", "Port 443 is open!\nThe domain is secure and is using SSL.\n")
+        else:
+            self.text_output.insert("end", "Port 443 is not open.\n The domain may not be using SSL.\n")
+
         self.text_output.insert("end", f"\nScanning complete at: {datetime.now()}\n")
 
 def main():
@@ -154,3 +160,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
