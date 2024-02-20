@@ -10,7 +10,7 @@ class PortScannerGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Port Scanner")
-        self.root.geometry("600x400")
+        self.root.geometry("650x300")
         
         # Label for target IP/Domain input
         self.label_host = ttk.Label(root, text="Target IP/Domain:")
