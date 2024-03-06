@@ -5,26 +5,27 @@ from tkinter import ttk
 from queue import Queue
 from datetime import datetime
 import os
+import ssl
 
 class PortScannerGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Port Scanner")
-        self.root.geometry("650x300")
+        self.root.geometry("650x600")
         
-        # Label for target IP/Domain input
+        #  target IP/Domain input
         self.label_host = ttk.Label(root, text="Target IP/Domain:")
         self.label_host.grid(row=0, column=0, padx=10, pady=5, sticky="w")
         
-        # Entry field for target IP/Domain input
+        # Entry  target IP/Domain input
         self.entry_host = ttk.Entry(root, width=30)
         self.entry_host.grid(row=0, column=1, padx=10, pady=5)
         
-        # Label for server ports input
+        #  server ports input
         self.label_ports = ttk.Label(root, text="Server Port(s) (e.g., 80, 1:1024, or leave blank for all ports):")
         self.label_ports.grid(row=1, column=0, padx=10, pady=5, sticky="w")
         
-        # Entry field for server ports input
+        # Entry  server ports input
         self.entry_ports = ttk.Entry(root, width=30)
         self.entry_ports.grid(row=1, column=1, padx=10, pady=5)
         
@@ -32,7 +33,7 @@ class PortScannerGUI:
         self.button_scan = ttk.Button(root, text="Scan", command=self.scan_ports)
         self.button_scan.grid(row=0, column=2, padx=10, pady=5, rowspan=2, sticky="nsew")
         
-        # Label for displaying scan results
+        #  displaying scan results
         self.label_output = ttk.Label(root, text="Scan Results:")
         self.label_output.grid(row=2, column=0, padx=10, pady=5, sticky="w")
         
@@ -46,19 +47,19 @@ class PortScannerGUI:
         self.text_output.config(yscrollcommand=self.scrolling.set)
         
     def clear(self):
-        # Function to clear the console or terminal screen
+        # clear the terminal screen
         if os.name == 'nt':
-            _ = os.system('cls')  # For Windows
+            _ = os.system('cls')  # Windows
         else:
-            _ = os.system('clear')  # For Unix/Linux
-        
+            _ = os.system('clear')  # Unix/Linux
+                    
     def scan_ports(self):
-        # Function to initiate port scanning
+        # initate the port scanning process
         host = self.entry_host.get()
         ports_input = self.entry_ports.get().strip()
         
         if ports_input == "":
-            start_port, end_port = 1, 65535  # Default port range if not specified
+            start_port, end_port = 1, 65535  # if port range is not specified, scan all ports
         elif ":" in ports_input:
             # If port range is specified as start:end
             try:
@@ -82,7 +83,7 @@ class PortScannerGUI:
         self.clear()  # Clear the console/terminal screen
         self.text_output.delete(1.0, "end")  # Clear previous scan results
         self.text_output.insert("end", "Port Scanner\n")
-        self.text_output.insert("end", "|---------------Coded by Junaid Hussain---------------|\n\n")
+        self.text_output.insert("end", "|CN MINI  PROJECT|\n\n")  
         self.text_output.insert("end", f"Target IP: {host}\n")
         self.text_output.insert("end", f"Scanning ports {start_port} to {end_port} started at: {datetime.now()}\n\n")
         
@@ -91,22 +92,30 @@ class PortScannerGUI:
         
     def run_scanner(self, host, start_port, end_port):
         # Function to perform port scanning
-
+        
         threads = 1021  # Number of threads for scanning
 
         def scan(port, protocol):
             # Function to scan a specific port
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM if protocol == 'tcp' else socket.SOCK_DGRAM)
             s.settimeout(5)  # Timeout for socket connection
-            try:
-                if protocol == 'tcp':
+            
+            if protocol == 'tcp':
+                try:
+                    if port == 443:  # If port is 443, use SSL/TLS
+                        s = ssl.wrap_socket(s)
                     s.connect((host, port))  # Check TCP connection
-                else:
+                    s.close()
+                    return True
+                except socket.error:
+                    return False
+            else:
+                try:
                     s.sendto(b'', (host, port))  # Check UDP connection
-                s.close()
-                return True
-            except socket.error:
-                return False
+                    s.close()
+                    return True
+                except socket.error:
+                    return False
 
         queue = Queue()  # Queue to store ports for scanning
 
@@ -160,4 +169,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
